@@ -1,0 +1,22 @@
+export const LOAD_PROFILE = 'LOAD_PROFILE'
+export const CREATE_PROFILE = 'CREATE_PROFILE'
+export const DELETE_PROFILE = 'DELETE_PROFILE'
+export const UPDATE_PROFILE = 'UPDATE_PROFILE'
+
+export const CREATE_PERIOD = 'CREATE_PERIOD'
+export const CREATE_EXPENSE = 'CREATE_EXPENSE'
+export const CREATE_INCOME = 'CREATE_INCOME'
+export const LOAD_EXPENSES = 'LOAD_EXPENSES'
+export const LOAD_INCOMES = 'LOAD_INCOMES'
+export const LOAD_PERIODS = 'LOAD_PERIODS'
+export const END_PERIOD = 'END_PERIOD'
+
+export const MAKE_EXPENSE = 'MAKE_EXPENSE'
+export const MAKE_INCOME = 'MAKE_INCOME'
+
+export const LOAD_CURRENT_DATA = 'LOAD_CURRENT_DATA'
+
+
+// export const LOAD_PERIODS = 'LOAD_PERIODS'
+
+
