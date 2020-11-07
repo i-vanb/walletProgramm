@@ -1,56 +1,88 @@
 import React, {useState} from 'react'
-import {View, Text, ScrollView, StyleSheet} from 'react-native'
-import {useSelector} from "react-redux";
-import {ProfileEditor} from "../components/ProfileEditor";
-import {THEME} from "../theme";
+import {View, Text, ScrollView, StyleSheet, TextInput, TouchableNativeFeedback, Switch, Picker} from 'react-native'
+
 import {AppButton} from "../components/ui/AppButton";
+import {useDispatch, useSelector} from "react-redux";
+import {changeLanguage, changeTheme} from "../store/actions/settings";
+import {AppText} from "../components/ui/AppText";
+import {THEME} from "../theme";
+import {lang} from "../utilities/lang";
 
 export const ProfileScreen = () => {
-    const profile = useSelector(state => state.profile.user)
-    const [changing, setChanging] = useState(false)
-    const date = `${profile.date.toString().length>1 ? profile.date : '0'+profile.date}.${profile.month.toString().length>1 ? profile.month : '0'+profile.month}.${profile.year}`
+    const settings = useSelector(state => state.settings)
 
-    if(changing) {
-        return <ScrollView><ProfileEditor submitChanges={() => setChanging(false)} onGetBack={() => setChanging(false)}/></ScrollView>
+    const [isEnabled, setIsEnabled] = useState(settings.theme === 'dark' && true)
+    const [appLanguage, setAppLanguage] = useState(settings.language)
+
+    const dispatch = useDispatch()
+
+    const toggleThemeSwitch = () => {
+        if (isEnabled) {
+            dispatch(changeTheme('light'))
+        } else {
+            dispatch(changeTheme('dark'))
+        }
+        setIsEnabled(previousState => !previousState)
     }
 
+
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Profile settings</Text>
-            <Text style={styles.title2}>Name: {profile.name}</Text>
-            <Text style={styles.title2}>Income: {profile.sum}</Text>
-            <Text style={styles.title2}>Adults: {profile.adults}</Text>
-            <Text style={styles.title2}>Children: {profile.children}</Text>
-            <Text style={styles.title2}>Period starts from: {date}</Text>
-            <AppButton title='change' onPress={()=>{setChanging(true)}}/>
+        <View style={{...styles.container, flex: 1, backgroundColor: THEME[settings.theme].back}}>
+            <AppText text={lang('SETTINGS', settings.language)} fontSize={20} color={THEME[settings.theme].title} otherStyle={{paddingVertical: 40}}/>
+            <View style={{flexDirection: 'row', justifyContent: 'center', paddingVertical: 10, borderBottomWidth: .5, marginHorizontal: 40}}>
+                <AppText color={THEME[settings.theme].title} text={lang('Dark mode', settings.language)} fontSize={18}/>
+                <Switch
+                    trackColor={{false: THEME.light.empty, true: THEME.dark.active}}
+                    thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
+                    ios_backgroundColor="#3e3e3e"
+                    onValueChange={toggleThemeSwitch}
+                    value={isEnabled}
+                />
+            </View>
+
+            <View style={{flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: .5, marginHorizontal: 30}}>
+
+                <View style={{flex: 1}}>
+                    <AppText fontSize={20} color={THEME[settings.theme].title} text={lang('Language', settings.language)}/>
+                </View>
+
+                <View style={{flex: 2}}>
+                    <Picker
+                        mode='dropdown'
+                        selectedValue={appLanguage}
+                        // style={styles.picker}
+                        style={{
+                            color: THEME[settings.theme].subtitle
+                        }}
+                        itemStyle={{
+                            color: THEME[settings.theme].title,
+                            fontFamily: 'bitter-regular',
+                            fontSize: 18
+                        }}
+                        onValueChange={(itemValue, itemIndex) => {
+                            setAppLanguage(itemValue)
+                            dispatch(changeLanguage(itemValue))
+                        }}>
+                        <Picker.Item label={lang('english', settings.language)} value='english'/>
+                        <Picker.Item label={lang('russian', settings.language)} value='russian'/>
+                    </Picker>
+                </View>
+
+            </View>
         </View>
     )
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        backgroundColor: THEME.color.light
-    },
-    title: {
-        fontSize: 25,
-        fontFamily: 'bitter-bold',
-        padding: 20,
-        color: THEME.color.dark
-    },
-    title2: {
-        fontFamily: 'bitter-regular',
-        fontSize: 18,
-        textAlign: 'center',
-        paddingBottom: 10,
-        color: THEME.color.warm
-    },
-    text: {
-        fontFamily: 'bitter-regular',
-        fontSize: 18,
-        textAlign: 'center',
-        paddingBottom: 15,
-        color: THEME.color.dark
-    }
+    container: {},
+    // picker: {
+    //     flex: 1,
+    //     // height: 50,
+    //     // backgroundColor: THEME.color.smooth,
+    //     // width: '80%',
+    //     fontSize: 18,
+    //     fontFamily: 'bitter-regular',
+    //     color: THEME.color.dark,
+    //     // paddingBottom: 40
+    // }
 })

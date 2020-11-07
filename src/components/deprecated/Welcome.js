@@ -1,10 +1,10 @@
 import React, {useState} from 'react'
 import {View, Text, StyleSheet} from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import {THEME} from "../theme";
+import {THEME} from "../../theme";
 import {ProfileEditor} from "./ProfileEditor";
-import {AppButton} from "./ui/AppButton";
-import {DB} from "../db";
+import {AppButton} from "../ui/AppButton";
+import {DB} from "../../db";
 
 export const Welcome = () => {
     const [isCreating, setIsCreating] = useState(false)

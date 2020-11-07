@@ -1,6 +1,6 @@
 import React from 'react'
 import {Text, View, StyleSheet, TouchableOpacity} from 'react-native'
-import {THEME} from "../theme";
+import {THEME} from "../../theme";
 
 export const IncomeItem = ({id, title, category, sum, onRemove, onOpen, date}) => {
     return (

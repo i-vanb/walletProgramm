@@ -1,37 +1,47 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import {View, Text, StyleSheet, TextInput, Button, Modal, Alert, Picker} from 'react-native'
 import {THEME} from '../theme'
-import {inputNumberHandler} from "../utilities/inputNumberHandler";
+import {inputNumberHandler} from "../utilities/inputNumberHandler"
+import {AppText} from "./ui/AppText"
+import {MaterialCommunityIcons} from "@expo/vector-icons"
+import {AppButton} from "./ui/AppButton"
 
 export const AddIncome = ({visible, onCancel, text, number, onSave}) => {
-    const [name, setName] = useState(text || 'income')
-    const [sum, setSum] = useState(number || 0)
-
+    const [name, setName] = useState(null)
+    const [sum, setSum] = useState(null)
 
     const saveHandler = () => {
-        if (name.trim().length < 3) {
+        if(!name && !text) {
+            let name = 'income'
+            onSave({name, sum})
+            setSum(null)
+        } else if (!sum) {
             Alert.alert(
-                'Ошибка!',
-                `Минимальная длинна названия 3 символа. Сейчас ${
+                'Error!',
+                'You need to fill sum field.'
+            )
+        } else if (name && name.trim().length < 3) {
+            Alert.alert(
+                'Error!',
+                `Minimal length 3 symbols. Now is ${
                     name.trim().length
-                } символов.`
+                }.`
             )
         } else {
-            let time = Date.now()
-            onSave(name, sum, time)
-            setName('income')
-            setSum(0)
+            onSave({name, sum})
+            setName(null)
+            setSum(null)
         }
     }
 
     return (
         <Modal visible={visible} animationType='slide' transparent={false}>
             <View style={styles.wrap}>
-                {/*<Text style={styles.title}>Category: </Text>*/}
-                {/*{categoryName}*/}
-                <Text style={styles.title}>Income: </Text>
+                <MaterialCommunityIcons name="credit-card-plus-outline" size={80}
+                                        color={THEME.color.green}/>
+                <AppText text='income:' fontSize={24} otherStyle={{padding: 0}}/>
                 <TextInput
-                    value={name}
+                    value={name===null ? text? text : 'income' : name}
                     onChangeText={setName}
                     style={styles.input}
                     placeholder='Enter income name'
@@ -39,9 +49,9 @@ export const AddIncome = ({visible, onCancel, text, number, onSave}) => {
                     autoCorrect={false}
                     maxLength={64}
                 />
-                <Text style={styles.title}>Sum: </Text>
+                <AppText text='sum:' fontSize={24} otherStyle={{padding: 0}}/>
                 <TextInput
-                    value={sum ? sum.toString() : ''}
+                    value={sum === null ? number? number.toString(): '' : sum.toString()}
                     onChangeText={text => inputNumberHandler(text, setSum)}
                     style={styles.input}
                     placeholder='Enter money earned'
@@ -50,12 +60,22 @@ export const AddIncome = ({visible, onCancel, text, number, onSave}) => {
                     maxLength={12}
                 />
                 <View style={styles.buttons}>
-                    <Button
-                        title='Cancel'
-                        onPress={onCancel}
-                        color={THEME.color.cold}
+                    <AppButton
+                    title='Cancel'
+                    color={THEME.color.dark}
+                    onPress={()=> {
+                        setSum(null)
+                        setName(null)
+                        onCancel()
+                    }}
+                    textStyle={{color: THEME.color.yellow}}
                     />
-                    <Button title='  Save  ' onPress={saveHandler}/>
+                    <AppButton
+                        title='Save'
+                        color={THEME.color.green}
+                        onPress={saveHandler}
+                        textStyle={{color: THEME.color.dark}}
+                    />
                 </View>
             </View>
         </Modal>
@@ -66,30 +86,22 @@ const styles = StyleSheet.create({
     wrap: {
         flex: 1,
         justifyContent: 'center',
-        alignItems: 'center'
+        // paddingVertical: 100,
+        alignItems: 'center',
+        backgroundColor: THEME.color.yellow,
     },
     input: {
         padding: 5,
-        borderBottomColor: THEME.color.warm,
-        borderBottomWidth: 2,
-        width: '80%'
+        borderBottomColor: THEME.color.green,
+        borderBottomWidth: 1,
+        width: '80%',
+        color: THEME.color.dark,
+        marginBottom: 30
     },
     buttons: {
         width: '100%',
         marginTop: 10,
         flexDirection: 'row',
         justifyContent: 'space-around'
-    },
-    title: {
-        paddingTop: 15,
-        color: THEME.color.dark,
-        fontSize: 20
-        // justifyContent: 'flex-start'
-    },
-    picker: {
-        height: 50,
-        width: 200,
-        color: THEME.color.warm,
-        fontSize: 20
     }
 })

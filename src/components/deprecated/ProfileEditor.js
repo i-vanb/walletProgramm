@@ -1,14 +1,13 @@
 import React, {useState} from 'react'
 import {View, TextInput, Text, StyleSheet, Keyboard} from 'react-native'
 import {useDispatch, useSelector} from "react-redux";
-import {updateProfile, createProfile} from "../store/actions/profile";
-import {inputNumberHandler} from "../utilities/inputNumberHandler";
-import {THEME} from "../theme";
-import {AppButton} from "./ui/AppButton";
+import {inputNumberHandler} from "../../utilities/inputNumberHandler";
+import {THEME} from "../../theme";
+import {AppButton} from "../ui/AppButton";
 import {FontAwesome} from "@expo/vector-icons";
-import {Calendar} from "./Calendar";
-import {createPeriod, initExpenses, initIncomes} from "../store/actions/period";
-import {DB} from "../db";
+import {Calendar} from "../Calendar";
+import {createPeriod, initExpenses, initIncomes} from "../../store/actions/period";
+import {DB} from "../../db";
 
 const getMonth = month => {
     let arr = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']

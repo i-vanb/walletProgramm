@@ -4,11 +4,11 @@ const db = SQLite.openDatabase('financeDB.db')
 
 export class DB {
 
-    static initProfile() {
+    static initCategories() {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    'CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, sum INTEGER NOT NULL, adults INTEGER NOT NULL, children INTEGER NOT NULL, date INTEGER NOT NULL, month INTEGER NOT NULL, year INTEGER NOT NULL, indexMonth INTEGER NOT NULL, currentPeriod TEXT, startPeriod INTEGER, endPeriod INTEGER, daysLeft INTEGER)',
+                    'CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, sum REAL NOT NULL, icon TEXT NOT NULL, iconLibrary TEXT NOT NULL)',
                     [],
                     resolve,
                     (_, error) => reject(error)
@@ -17,25 +17,12 @@ export class DB {
         })
     }
 
-    static deleteProfile() {
+    static addCategory(name, icon, iconLibrary) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    'DROP TABLE profile',
-                    [],
-                    resolve,
-                    (_, error) => reject(error)
-                )
-            })
-        })
-    }
-
-    static createProfile({name, sum, adults, children, date, month, year, indexMonth}) {
-        return new Promise((resolve, reject) => {
-            db.transaction(tx => {
-                tx.executeSql(
-                    `INSERT INTO profile (id, name, sum, adults, children, date, month, year, indexMonth) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [name, sum, adults, children, date, month, year, indexMonth],
+                    `INSERT INTO categories (name, sum, icon, iconLibrary) VALUES (?, 0, ?, ?)`,
+                    [name, icon, iconLibrary],
                     (_, result) => resolve(result.insertId),
                     (_, error) => reject(error)
                 )
@@ -43,12 +30,12 @@ export class DB {
         })
     }
 
-    static updateProfile({name, sum, adults, children, date, month, year, indexMonth}) {
+    static changeCategoryName(id, name) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    'UPDATE profile SET name=?, sum=?, adults=?, children=?, date=?, month=?, year=?, indexMonth=? WHERE id = 1',
-                    [name, sum, adults, children, date, month, year, indexMonth],
+                    'UPDATE categories SET name = ? WHERE id = ?',
+                    [name, id],
                     resolve,
                     (_, error) => reject(error)
                 )
@@ -56,40 +43,50 @@ export class DB {
         })
     }
 
-    static getProfile() {
+    static changeCategorySum(id, sum) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    'SELECT * FROM profile WHERE ID = 1',
-                    [],
-                    (_, result) => resolve(result.rows._array[0]),
+                    'UPDATE categories SET sum = ? WHERE id = ?',
+                    [sum, id],
+                    resolve,
                     (_, error) => reject(error)
                 )
             })
         })
     }
 
-    // static setProfileCurrentPeriod(name, start, end) {
-    //     return new Promise((resolve, reject) => {
-    //         db.transaction(tx => {
-    //             tx.executeSql(
-    //                 `UPDATE profile SET currentPeriod=?, startPeriod=?, endPeriod=? WHERE id = 1`,
-    //                 [name, start, end],
-    //                 resolve,
-    //                 (_, error) => reject(error)
-    //             )
-    //         })
-    //     })
-    // }
+    static getCategories() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'SELECT * FROM categories',
+                    [],
+                    (_, result) => resolve(result.rows._array),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
 
-
-    // periods
+    static deleteCategory(id) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `DELETE FROM categories WHERE id = ?`,
+                    [id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
 
     static initPeriods() {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    'CREATE TABLE IF NOT EXISTS periods (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, dateS INTEGER NOT NULL, monthS INTEGER NOT NULL, yearS INTEGER NOT NULL, dateF INTEGER NOT NULL, monthF INTEGER NOT NULL, yearF INTEGER NOT NULL, done INTEGER NOT NULL)',
+                    'CREATE TABLE IF NOT EXISTS periods (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, start REAL, end REAL)',
                     [],
                     resolve,
                     (_, error) => reject(error)
@@ -98,25 +95,12 @@ export class DB {
         })
     }
 
-    static deletePeriods() {
+    static addPeriod(name) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    'DROP TABLE periods',
-                    [],
-                    resolve,
-                    (_, error) => reject(error)
-                )
-            })
-        })
-    }
-
-    static createPeriod({name, dateS, monthS, yearS, dateF, monthF, yearF}) {
-        return new Promise((resolve, reject) => {
-            db.transaction(tx => {
-                tx.executeSql(
-                    `INSERT INTO periods (name, dateS, monthS, yearS, dateF, monthF, yearF, done) VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
-                    [name, dateS, monthS, yearS, dateF, monthF, yearF],
+                    `INSERT INTO periods (name) VALUES (?)`,
+                    [name],
                     (_, result) => resolve(result.insertId),
                     (_, error) => reject(error)
                 )
@@ -124,11 +108,11 @@ export class DB {
         })
     }
 
-    static finishPeriod(id) {
+    static deletePeriod(id) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `UPDATE periods SET done=1 WHERE id = ?`,
+                    `DELETE FROM periods WHERE id = ?`,
                     [id],
                     resolve,
                     (_, error) => reject(error)
@@ -137,12 +121,25 @@ export class DB {
         })
     }
 
-    static unFinishPeriod(id) {
+    static changePeriodStart(name, sum) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `UPDATE periods SET done=0 WHERE id = ?`,
-                    [id],
+                    'UPDATE periods SET start = ? WHERE name = ?',
+                    [sum, name],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changePeriodEnd(name, sum) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE periods SET end = ? WHERE name = ?',
+                    [sum, name],
                     resolve,
                     (_, error) => reject(error)
                 )
@@ -154,7 +151,7 @@ export class DB {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `SELECT * FROM periods`,
+                    'SELECT * FROM periods',
                     [],
                     (_, result) => resolve(result.rows._array),
                     (_, error) => reject(error)
@@ -163,24 +160,83 @@ export class DB {
         })
     }
 
-    // static getPeriod({id}) {
-    //     return new Promise((resolve, reject) => {
-    //         db.transaction(tx => {
-    //             tx.executeSql(
-    //                 `SELECT * FROM periods WHERE id = ?`,
-    //                 [id],
-    //                 (_, result) => resolve(result.rows._array),
-    //                 (_, error) => reject(error)
-    //             )
-    //         })
-    //     })
-    // }
-
-    static getLastPeriod() {
+    static initWallet() {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    'SELECT * FROM periods WHERE  ID=(SELECT MAX(ID) FROM periods)',
+                    'CREATE TABLE IF NOT EXISTS wallet (id INTEGER PRIMARY KEY NOT NULL, sum REAL NOT NULL, saving REAL NOT NULL)',
+                    [],
+                    (result) => {
+                        tx.executeSql(
+                            'SELECT * FROM wallet WHERE ID=1',
+                            [],
+                            (_, result) => resolve(result.rows),
+                            (_, error) => reject(error)
+                        )
+                    },
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static createWallet() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `INSERT INTO wallet (id, sum, saving) VALUES (1, 0, 0)`,
+                    [],
+                    (_, result) => resolve(result.insertId),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeWalletSum(sum) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE wallet SET sum = ? WHERE id = 1',
+                    [sum],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeWalletSaving(saving) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE wallet SET saving = ? WHERE id = 1',
+                    [saving],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static getWallet() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'SELECT * FROM wallet WHERE ID=1',
+                    [],
+                    (_, result) => resolve(result.rows._array[0]),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static getWalletObject() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'SELECT * FROM wallet',
                     [],
                     (_, result) => resolve(result.rows._array),
                     (_, error) => reject(error)
@@ -189,40 +245,11 @@ export class DB {
         })
     }
 
-    // static removePeriod(name) {
-    //     return new Promise((resolve, reject) => {
-    //         db.transaction(tx => {
-    //             tx.executeSql(
-    //                 `DELETE FROM periods WHERE name = ?`,
-    //                 [name],
-    //                 resolve,
-    //                 (_, error) => reject(error)
-    //             )
-    //         })
-    //     })
-    // }
-    //
-    // static removeALLPeriods() {
-    //     return new Promise((resolve, reject) => {
-    //         db.transaction(tx => {
-    //             tx.executeSql(
-    //                 `DELETE FROM periods`,
-    //                 [],
-    //                 () => console.log('PERIODS DELETED'),
-    //                 (_, error) => reject(error)
-    //             )
-    //         })
-    //     })
-    // }
-
-
-    // expenses
-
-    static initExpenses(name) {
+    static initIncomes() {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `CREATE TABLE IF NOT EXISTS ${name} (id INTEGER PRIMARY KEY NOT NULL, category TEXT NOT NULL, name TEXT NOT NULL, sum REAL NOT NULL, paid INT NOT NULL, planSum REAL, deadLine INTEGER)`,
+                    'CREATE TABLE IF NOT EXISTS incomes (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, sum REAL NOT NULL, date INTEGER NOT NULL, period TEXT NOT NULL)',
                     [],
                     resolve,
                     (_, error) => reject(error)
@@ -231,12 +258,51 @@ export class DB {
         })
     }
 
-    static deleteTable(name) {
+    static getIncomes(period) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `DROP TABLE ${name}`,
+                    'SELECT * FROM incomes WHERE period = ?',
+                    [period],
+                    (_, result) => resolve(result.rows._array),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static getAllIncomes() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'SELECT * FROM incomes',
                     [],
+                    (_, result) => resolve(result.rows._array),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static addIncome(name, sum, date, period) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `INSERT INTO incomes (name, sum, date, period) VALUES (?, ?, ?, ?)`,
+                    [name, sum, date, period],
+                    (_, result) => resolve(result.insertId),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeIncomeName(id, name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE incomes SET name = ? WHERE id = ?',
+                    [name, id],
                     resolve,
                     (_, error) => reject(error)
                 )
@@ -244,37 +310,11 @@ export class DB {
         })
     }
 
-    static createExpense(table, category, name, sum) {
+    static changeIncomeSum(id, sum) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `INSERT INTO ${table} (category, name, sum, paid) VALUES (?, ?, ?, 1)`,
-                    [category, name, sum],
-                    resolve,
-                    (_, error) => reject(error)
-                )
-            })
-        })
-    }
-
-    static planExpense({tableName, category, name, planSum, deadLine}) {
-        return new Promise((resolve, reject) => {
-            db.transaction(tx => {
-                tx.executeSql(
-                    `INSERT INTO ${tableName} (category, name, sum, paid, planSum, deadLine) VALUES (?, ?, 0, 0, ?, ?)`,
-                    [category, name, planSum, deadLine],
-                    resolve,
-                    (_, error) => reject(error)
-                )
-            })
-        })
-    }
-
-    static payExpense({tableName, id, sum}) {
-        return new Promise((resolve, reject) => {
-            db.transaction(tx => {
-                tx.executeSql(
-                    `UPDATE ${tableName} SET sum=? paid=1 WHERE id = ?`,
+                    'UPDATE incomes SET sum = ? WHERE id = ?',
                     [sum, id],
                     resolve,
                     (_, error) => reject(error)
@@ -283,26 +323,24 @@ export class DB {
         })
     }
 
-    static getExpense(tableName) {
+    static deleteIncome(id) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `SELECT * FROM ${tableName}`,
-                    [],
-                    (_, result) => resolve(result.rows._array),
-                    (_, error) => reject(error, tableName)
+                    `DELETE FROM incomes WHERE id = ?`,
+                    [id],
+                    resolve,
+                    (_, error) => reject(error)
                 )
             })
         })
     }
 
-    // incomes
-
-    static initIncomes(tableName) {
+    static initExpenses() {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `CREATE TABLE IF NOT EXISTS ${tableName} (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, sum REAL NOT NULL, date INTEGER NOT NULL)`,
+                    'CREATE TABLE IF NOT EXISTS expenses (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, sum REAL NOT NULL, date INTEGER NOT NULL, period TEXT NOT NULL, category TEXT NOT NULL)',
                     [],
                     resolve,
                     (_, error) => reject(error)
@@ -311,24 +349,24 @@ export class DB {
         })
     }
 
-    static createIncome({table, name, sum, date}) {
+    static getExpenses(period) {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `INSERT INTO ${table} (name, sum, date) VALUES (?, ?, ?)`,
-                    [name, sum, date],
-                    resolve,
+                    'SELECT * FROM expenses WHERE period = ?',
+                    [period],
+                    (_, result) => resolve(result.rows._array),
                     (_, error) => reject(error)
                 )
             })
         })
     }
 
-    static getIncomes(tableName) {
+    static getAllExpenses() {
         return new Promise((resolve, reject) => {
             db.transaction(tx => {
                 tx.executeSql(
-                    `SELECT * FROM ${tableName}`,
+                    'SELECT * FROM expenses',
                     [],
                     (_, result) => resolve(result.rows._array),
                     (_, error) => reject(error)
@@ -336,6 +374,431 @@ export class DB {
             })
         })
     }
+
+    static addExpense(name, sum, date, period, category) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `INSERT INTO expenses (name, sum, date, period, category) VALUES (?, ?, ?, ?, ?)`,
+                    [name, sum, date, period, category],
+                    (_, result) => resolve(result.insertId),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeExpenseName(id, name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE expenses SET name = ? WHERE id = ?',
+                    [name, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeExpenseSum(id, sum) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE expenses SET sum = ? WHERE id = ?',
+                    [sum, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeExpenseCategory(id, category) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE expenses SET category = ? WHERE id = ?',
+                    [category, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static deleteExpense(id) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `DELETE FROM expenses WHERE id = ?`,
+                    [id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static initPlan() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'CREATE TABLE IF NOT EXISTS plan (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, sum REAL NOT NULL, date INTEGER NOT NULL, category TEXT NOT NULL, deadline INTEGER NOT NULL)',
+                    [],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static getPlans() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'SELECT * FROM plan',
+                    [],
+                    (_, result) => resolve(result.rows._array),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static addPlan(name, sum, date, category, deadline) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `INSERT INTO plan (name, sum, date, category, deadline) VALUES (?, ?, ?, ?, ?)`,
+                    [name, sum, date, category, deadline],
+                    (_, result) => resolve(result.insertId),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changePlanName(id, name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE plan SET name = ? WHERE id = ?',
+                    [name, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changePlanSum(id, sum) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE plan SET sum = ? WHERE id = ?',
+                    [sum, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changePlanCategory(id, category) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE plan SET category = ? WHERE id = ?',
+                    [category, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changePlanDeadline(id, deadline) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE plan SET deadline = ? WHERE id = ?',
+                    [deadline, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static deletePlan(id) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `DELETE FROM plan WHERE id = ?`,
+                    [id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static initCurrentPeriod(name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `CREATE TABLE IF NOT EXISTS ${name} (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, plan REAL NOT NULL, fact REAL NOT NULL, icon TEXT NOT NULL, iconLibrary TEXT NOT NULL)`,
+                    [],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static addCurrentCategory(table, name, plan, fact, icon, iconLibrary) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `INSERT INTO ${table} (name, plan, fact, icon, iconLibrary) VALUES (?, ?, ?, ?, ?)`,
+                    [name, plan, fact, icon, iconLibrary],
+                    (_, result) => resolve(result.insertId),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static getCurrentPeriod(name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `SELECT * FROM ${name}`,
+                    [],
+                    (_, result) => resolve(result.rows._array),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static getReportPeriod(name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `SELECT * FROM ${name}`,
+                    [],
+                    (_, result) => resolve(result.rows._array),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static getReportExpenses(name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `SELECT * FROM ${name}`,
+                    [],
+                    (_, result) => resolve(result.rows._array),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static deleteCurrentCategory(table, id) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `DELETE FROM ${table} WHERE id = ?`,
+                    [id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeCurrentCategoryName(table, id, name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `UPDATE ${table} SET name = ? WHERE id = ?`,
+                    [name, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeCurrentCategoryPlan(table, id, plan) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `UPDATE ${table} SET plan = ? WHERE id = ?`,
+                    [plan, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeCurrentCategoryFact(table, id, fact) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `UPDATE ${table} SET fact = ? WHERE id = ?`,
+                    [fact, id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static dropTable(name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `DROP TABLE ${name}`,
+                    [],
+                    (_, result) => resolve(result.rows._array[0]),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static initSettings() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY NOT NULL, theme TEXT NOT NULL, language TEXT NOT NULL)',
+                    [],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+
+
+    static createSettings(language) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `INSERT INTO settings (id, theme, language) VALUES (1, 'light', ?)`,
+                    [language],
+                    (_, result) => resolve(result.insertId),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static getSettings() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'SELECT * FROM settings WHERE ID=1',
+                    [],
+                    (_, result) => resolve(result.rows._array[0]),
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeLanguage(language) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE settings SET language = ? WHERE id = 1',
+                    [language],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static changeTheme(theme) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE settings SET theme = ? WHERE id = 1',
+                    [theme],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static updateTable(table, column, properties) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `ALTER TABLE ${table} ADD ${column} ${properties}`,
+                    [],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+
+    static updateTablePeriods() {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'ALTER TABLE periods ADD start REAL end REAL',
+                    [],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static deleteFromPeriod(id) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `DELETE FROM periods WHERE id=? `,
+                    [id],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+    static deleteByPeriodName(table, name) {
+        return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+                tx.executeSql(
+                    `DELETE FROM ${table} WHERE period=? `,
+                    [name],
+                    resolve,
+                    (_, error) => reject(error)
+                )
+            })
+        })
+    }
+
+
+
+
+
+
 
 
 }

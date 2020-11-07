@@ -1,9 +1,9 @@
 import React, {useState} from 'react'
 import {View, Text, StyleSheet, TextInput, Button, Modal, Alert, Picker} from 'react-native'
-import {THEME} from '../theme'
-import {inputNumberHandler} from "../utilities/inputNumberHandler";
+import {THEME} from '../../theme'
+import {inputNumberHandler} from "../../utilities/inputNumberHandler";
 
-export const AddExpense = ({visible, onCancel, text, number, title, onSave}) => {
+export const EditExpense = ({visible, onCancel, text, number, title, onSave}) => {
     const [name, setName] = useState(text || '')
     const [sum, setSum] = useState(number || '')
     const [category, setCategory] = useState(title || 'home')
@@ -24,24 +24,26 @@ export const AddExpense = ({visible, onCancel, text, number, title, onSave}) => 
         }
     }
 
-    const categoryName =
-        <Picker
-            selectedValue={category}
-            style={styles.picker}
-            onValueChange={(itemValue, itemIndex) => setCategory(itemValue)}>
-            <Picker.Item label="Home" value="home"/>
-            <Picker.Item label="Food" value="food"/>
-            <Picker.Item label="Car" value="car"/>
-            <Picker.Item label="Credit" value="credit"/>
-            <Picker.Item label="Service" value="service"/>
-            <Picker.Item label="Fun" value="fun"/>
-        </Picker>
+    // const categoryName =
+    //     <Picker
+    //         selectedValue={category}
+    //         style={styles.picker}
+    //         onValueChange={(itemValue, itemIndex) => setCategory(itemValue)}>
+    //         <Picker.Item label="Home" value="home"/>
+    //         <Picker.Item label="Food" value="food"/>
+    //         <Picker.Item label="Car" value="car"/>
+    //         <Picker.Item label="Credit" value="credit"/>
+    //         <Picker.Item label="Service" value="service"/>
+    //         <Picker.Item label="Fun" value="fun"/>
+    //     </Picker>
 
     return (
         <Modal visible={visible} animationType='slide' transparent={false}>
             <View style={styles.wrap}>
                 <Text style={styles.title}>Category: </Text>
-                {categoryName}
+
+
+
                 <Text style={styles.title}>Expense: </Text>
                 <TextInput
                     value={name}
